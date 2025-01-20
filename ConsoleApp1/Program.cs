@@ -9,7 +9,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string pageUrl = "https://www.lemonde.fr/";
+        string pageUrl = "https://www.lefigaro.fr/";
 
         // Ensemble pour stocker les URLs déjà traitées
         HashSet<string> visitedUrls = new HashSet<string>();
