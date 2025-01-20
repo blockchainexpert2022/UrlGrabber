@@ -9,10 +9,10 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de départ
-        string startUrl = "https://lemonde.fr";
+        string startUrl = "https://www.lefigaro.fr";
 
         // Profondeur maximale de l'exploration
-        int maxDepth = 2;
+        int maxDepth = 1;
 
         try
         {
@@ -54,7 +54,7 @@ class Program
 
         try
         {
-            using (HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(3) })
+            using (HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) })
             {
                 client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
