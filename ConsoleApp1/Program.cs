@@ -6,20 +6,30 @@ using System.Threading.Tasks;
 
 class Program
 {
+    // Compteur global pour compter les requêtes HTTP
+    private static int TotalHttpRequests = 0;
+
     static async Task Main(string[] args)
     {
-        // URL de départ
-        string startUrl = "https://www.lefigaro.fr";
-
-        // Profondeur maximale de l'exploration
-        int maxDepth = 1;
+        // URL de la page à analyser
+        string initialPageUrl = "https://www.microsoft.com/";
 
         try
         {
-            // Lancement de l'exploration récursive
-            Console.WriteLine($"Démarrage de l'exploration depuis : {startUrl} (Profondeur maximale : {maxDepth})");
-            HashSet<string> visitedUrls = new HashSet<string>();
-            await ExploreUrlRecursively(startUrl, visitedUrls, maxDepth, 0);
+            // Créez une instance de HttpClient avec un délai d'expiration de 5 secondes
+            using (HttpClient client = new HttpClient())
+            {
+                client.Timeout = TimeSpan.FromSeconds(5); // Configure un timeout de 5 secondes
+
+                // Ensemble pour garder une trace des pages visitées
+                HashSet<string> visitedUrls = new HashSet<string>();
+
+                // Lancer l'analyse initiale
+                await CrawlPageAsync(client, initialPageUrl, visitedUrls);
+
+                // Afficher le nombre total de requêtes HTTP effectuées
+                Console.WriteLine($"\nNombre total de requêtes HTTP envoyées : {TotalHttpRequests}");
+            }
         }
         catch (Exception ex)
         {
@@ -27,74 +37,81 @@ class Program
         }
     }
 
-    /// <summary>
-    /// Méthode pour explorer les URLs de façon récursive jusqu'à une profondeur donnée.
-    /// </summary>
-    /// <param name="url">L'URL actuelle à explorer.</param>
-    /// <param name="visitedUrls">HashSet pour suivre les URLs visitées.</param>
-    /// <param name="maxDepth">Profondeur maximale autorisée.</param>
-    /// <param name="currentDepth">Profondeur actuelle.</param>
-    private static async Task ExploreUrlRecursively(string url, HashSet<string> visitedUrls, int maxDepth, int currentDepth)
+    // Méthode pour explorer une page et ses liens
+    static async Task CrawlPageAsync(HttpClient client, string pageUrl, HashSet<string> visitedUrls)
     {
-        // Vérifie si la profondeur maximale est atteinte
-        if (currentDepth > maxDepth)
+        if (visitedUrls.Contains(pageUrl))
         {
-            //Console.WriteLine($"Profondeur maximale atteinte pour : {url}");
+            // Si l'URL a déjà été visitée, on arrête pour éviter des boucles infinies
             return;
         }
 
-        // Vérifie si l'URL a déjà été visitée
-        if (visitedUrls.Contains(url))
-        {
-            //Console.WriteLine($"URL déjà visitée, passons : {url}");
-            return;
-        }
-
-        //Console.WriteLine($"Exploration (profondeur {currentDepth}) : {url}");
+        Console.WriteLine($"Récupération de la page : {pageUrl}");
+        visitedUrls.Add(pageUrl); // Marquer l'URL comme visitée
 
         try
         {
-            using (HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(30) })
+            // Récupérer le contenu de la page HTML
+            string pageContent = await client.GetStringAsync(pageUrl);
+
+            // Extraire les liens HTTP
+            List<string> httpLinks = ExtractHttpLinks(pageContent);
+
+            Console.WriteLine($"Nombre de liens trouvés sur {pageUrl} : {httpLinks.Count}");
+
+            // Envoyer une requête HTTP à chaque lien trouvé, sauf ceux à exclure
+            foreach (string link in httpLinks)
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-
-                Console.WriteLine("Requête vers " + url);
-                
-                // Récupère le contenu de la page
-                string pageContent = await client.GetStringAsync(url);
-
-                // Pause (optionnelle) entre les requêtes pour éviter une surcharge
-                await Task.Delay(1000);
-
-                // Ajoute l'URL au HashSet des URLs visitées
-                visitedUrls.Add(url);
-
-                // Extraire les liens HTTP de la page
-                List<string> httpLinks = ExtractHttpLinks(pageContent);
-
-                Console.WriteLine($"Nombre de liens trouvés sur {url} : {httpLinks.Count}");
-
-                // Boucle sur chaque lien extrait
-                foreach (string link in httpLinks)
+                // Exclure les liens dont la base est www.w3.org
+                if (Uri.TryCreate(link, UriKind.Absolute, out Uri uri) && uri.Host == "www.w3.org")
                 {
-                    // Exploration récursive de chaque lien trouvé
-                    await ExploreUrlRecursively(link, visitedUrls, maxDepth, currentDepth + 1);
+                    Console.WriteLine($"Lien exclu (w3.org) : {link}");
+                    continue;
                 }
+
+                TotalHttpRequests++; // Incrémenter le compteur
+                Console.WriteLine($"[{TotalHttpRequests}] Envoi d'une requête à : {link}");
+
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(link);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Succès ({response.StatusCode}) pour : {link}");
+
+                        // Appeler récursivement si la page est bien accessible
+                        await CrawlPageAsync(client, link, visitedUrls);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Erreur ({response.StatusCode}) pour : {link}");
+                    }
+                }
+                catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+                {
+                    // Gestion particulière si la tâche est annulée à cause d'un timeout
+                    Console.WriteLine($"Timeout (5 secondes) atteint pour : {link}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception lors de la requête vers {link} : {ex.Message}");
+                }
+
+                // Temporisation de 0,5 seconde après chaque requête
+                await Task.Delay(500);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Exception lors de la requête vers {url} : {ex.Message}");
+            Console.WriteLine($"Erreur lors de la récupération de la page {pageUrl} : {ex.Message}");
         }
     }
 
-    /// <summary>
-    /// Méthode pour extraire les liens HTTP/HTTPS d'un contenu HTML.
-    /// </summary>
-    /// <param name="htmlContent">Contenu HTML à analyser.</param>
-    /// <returns>Liste de liens trouvés.</returns>
-    private static List<string> ExtractHttpLinks(string htmlContent)
+    // Méthode pour extraire tous les liens HTTP d'une chaîne de texte
+    static List<string> ExtractHttpLinks(string htmlContent)
     {
+        // Expression régulière pour trouver tous les liens HTTP/HTTPS
         string pattern = @"https?://[^\s""'<>]+";
         Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
 
