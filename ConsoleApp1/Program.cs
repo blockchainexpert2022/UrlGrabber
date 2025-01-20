@@ -12,7 +12,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.microsoft.com/";
+        string initialPageUrl = "https://www.pcsoft.fr/";
 
         try
         {
