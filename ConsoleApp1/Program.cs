@@ -9,7 +9,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de départ
-        string startUrl = "https://doc.pcsoft.fr/fr-FR/search2.awp?q=HOuvreConnexion&mode=index&origin=searchbox";
+        string startUrl = "https://lemonde.fr";
 
         // Profondeur maximale de l'exploration
         int maxDepth = 2;
@@ -39,18 +39,18 @@ class Program
         // Vérifie si la profondeur maximale est atteinte
         if (currentDepth > maxDepth)
         {
-            Console.WriteLine($"Profondeur maximale atteinte pour : {url}");
+            //Console.WriteLine($"Profondeur maximale atteinte pour : {url}");
             return;
         }
 
         // Vérifie si l'URL a déjà été visitée
         if (visitedUrls.Contains(url))
         {
-            Console.WriteLine($"URL déjà visitée, passons : {url}");
+            //Console.WriteLine($"URL déjà visitée, passons : {url}");
             return;
         }
 
-        Console.WriteLine($"Exploration (profondeur {currentDepth}) : {url}");
+        //Console.WriteLine($"Exploration (profondeur {currentDepth}) : {url}");
 
         try
         {
@@ -58,8 +58,13 @@ class Program
             {
                 client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
+                Console.WriteLine("Requête vers " + url);
+                
                 // Récupère le contenu de la page
                 string pageContent = await client.GetStringAsync(url);
+
+                // Pause (optionnelle) entre les requêtes pour éviter une surcharge
+                await Task.Delay(1000);
 
                 // Ajoute l'URL au HashSet des URLs visitées
                 visitedUrls.Add(url);
@@ -74,9 +79,6 @@ class Program
                 {
                     // Exploration récursive de chaque lien trouvé
                     await ExploreUrlRecursively(link, visitedUrls, maxDepth, currentDepth + 1);
-
-                    // Pause (optionnelle) entre les requêtes pour éviter une surcharge
-                    await Task.Delay(1000);
                 }
             }
         }
