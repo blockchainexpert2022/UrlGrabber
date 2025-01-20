@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\ConsoleApp1\\ConsoleApp1\\ConsoleApp1.csproj",
+      "projectUniqueName": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\UrlGrabber\\ConsoleApp1\\ConsoleApp1.csproj",
       "projectName": "ConsoleApp1",
-      "projectPath": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\ConsoleApp1\\ConsoleApp1\\ConsoleApp1.csproj",
+      "projectPath": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\UrlGrabber\\ConsoleApp1\\ConsoleApp1.csproj",
       "packagesPath": "C:\\Users\\WDAGUtilityAccount\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\ConsoleApp1\\ConsoleApp1\\obj\\",
+      "outputPath": "C:\\Users\\WDAGUtilityAccount\\RiderProjects\\UrlGrabber\\ConsoleApp1\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\WDAGUtilityAccount\\AppData\\Roaming\\NuGet\\NuGet.Config"

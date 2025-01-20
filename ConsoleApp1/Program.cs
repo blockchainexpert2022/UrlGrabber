@@ -14,7 +14,7 @@ class Program
         try
         {
             // Créez une instance de HttpClient
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(3) })
             {
                 // Étape 1 : Récupérer le contenu de la page HTML
                 Console.WriteLine($"Récupération de la page : {pageUrl}");
@@ -42,6 +42,8 @@ class Program
                         {
                             Console.WriteLine($"Erreur ({response.StatusCode}) pour : {link}");
                         }
+                        
+                        await Task.Delay(1500);
                     }
                     catch (Exception ex)
                     {
