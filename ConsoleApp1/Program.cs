@@ -9,13 +9,18 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string pageUrl = "https://www.windev.fr/";
+        string pageUrl = "https://www.lemonde.fr/";
+
+        // Ensemble pour stocker les URLs déjà traitées
+        HashSet<string> visitedUrls = new HashSet<string>();
 
         try
         {
             // Créez une instance de HttpClient
             using (HttpClient client = new HttpClient() { Timeout = TimeSpan.FromSeconds(3) })
             {
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+
                 // Étape 1 : Récupérer le contenu de la page HTML
                 Console.WriteLine($"Récupération de la page : {pageUrl}");
                 string pageContent = await client.GetStringAsync(pageUrl);
@@ -28,6 +33,16 @@ class Program
                 // Étape 3 : Envoyer une requête HTTP à chaque lien trouvé
                 foreach (string link in httpLinks)
                 {
+                    // Vérifie si l'URL a déjà été traitée
+                    if (visitedUrls.Contains(link))
+                    {
+                        Console.WriteLine($"Lien déjà traité, passons : {link}");
+                        continue; // Saute les liens déjà visités
+                    }
+
+                    // Ajoute l'URL au HashSet
+                    visitedUrls.Add(link);
+
                     Console.WriteLine($"Envoi d'une requête à : {link}");
 
                     try
@@ -42,7 +57,8 @@ class Program
                         {
                             Console.WriteLine($"Erreur ({response.StatusCode}) pour : {link}");
                         }
-                        
+
+                        // Pause entre les requêtes
                         await Task.Delay(1500);
                     }
                     catch (Exception ex)
