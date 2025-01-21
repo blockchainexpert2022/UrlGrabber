@@ -14,7 +14,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://forum.pcsoft.fr/index.awp";
+        string initialPageUrl = "https://www.microsoft.com/";
         Uri uri = new Uri(initialPageUrl);
         baseUrl = uri.GetLeftPart(UriPartial.Authority);
         Console.WriteLine("baseUrl : " + baseUrl);
@@ -26,8 +26,8 @@ class Program
             {
                 client.Timeout = TimeSpan.FromSeconds(5); // Configure un timeout de 5 secondes
 
-                // Ensemble pour garder une trace des pages visitées
-                HashSet<string> visitedUrls = new HashSet<string>();
+                // Ensemble pour garder une trace des pages visitées (insensible à la casse)
+                HashSet<string> visitedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 // Lancer l'analyse initiale
                 await CrawlPageAsync(client, initialPageUrl, visitedUrls);
@@ -45,29 +45,32 @@ class Program
     // Méthode pour explorer une page et ses liens
     static async Task CrawlPageAsync(HttpClient client, string pageUrl, HashSet<string> visitedUrls)
     {
-        if (visitedUrls.Contains(pageUrl))
+        // Supprimer les fragments avant vérification
+        string cleanUrl = pageUrl.Split('#')[0];
+
+        if (visitedUrls.Contains(cleanUrl))
         {
             // Si l'URL a déjà été visitée, on arrête pour éviter des boucles infinies
             return;
         }
         
-        Console.WriteLine($"Récupération de la page : {pageUrl}");
-        visitedUrls.Add(pageUrl); // Marquer l'URL comme visitée
+        Console.WriteLine($"Récupération de la page : {cleanUrl}");
+        visitedUrls.Add(cleanUrl); // Marquer l'URL comme visitée
 
         try
         {
             // Récupérer le contenu de la page HTML
-            string pageContent = await client.GetStringAsync(pageUrl);
+            string pageContent = await client.GetStringAsync(cleanUrl);
 
             // Extraire les liens HTTP
             List<string> httpLinks = ExtractHttpLinks(pageContent);
 
-            Console.WriteLine($"Nombre de liens trouvés sur {pageUrl} : {httpLinks.Count}");
+            Console.WriteLine($"Nombre de liens trouvés sur {cleanUrl} : {httpLinks.Count}");
 
             // Envoyer une requête HTTP à chaque lien trouvé, sauf ceux à exclure
             foreach (string link in httpLinks)
             {
-                //Console.WriteLine("pageUrl : " + pageUrl);
+                // Exclure les URL ne correspondant pas au domaine de base
                 if (!link.StartsWith(baseUrl))
                 {
                     continue;
@@ -80,12 +83,25 @@ class Program
                 {
                     HttpResponseMessage response = await client.GetAsync(link);
 
+                    // Si la requête est un succès
                     if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Succès ({response.StatusCode}) pour : {link}");
+                        // Récupérer l'URL finale après redirection
+                        string finalUrl = response.RequestMessage.RequestUri.ToString();
 
-                        // Appeler récursivement si la page est bien accessible
-                        await CrawlPageAsync(client, link, visitedUrls);
+                        // Vérifier si l'URL finale a déjà été visitée
+                        if (!visitedUrls.Contains(finalUrl.Split('#')[0]))
+                        {
+                            Console.WriteLine($"Succès ({response.StatusCode}) pour : {finalUrl}");
+
+                            // Ajouter l'URL finale et appeler récursivement
+                            visitedUrls.Add(finalUrl.Split('#')[0]);
+                            await CrawlPageAsync(client, finalUrl, visitedUrls);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"URL finale déjà visitée : {finalUrl}");
+                        }
                     }
                     else
                     {
@@ -119,14 +135,13 @@ class Program
         string pattern = @"https?://[^\s""'<>]+";
         Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
 
-        MatchCollection matches = regex.Matches(htmlContent);
-
-        List<string> links = new List<string>();
-        foreach (Match match in matches)
+        HashSet<string> uniqueLinks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Match match in regex.Matches(htmlContent))
         {
-            links.Add(match.Value);
+            // Ajouter sans doublons
+            uniqueLinks.Add(match.Value.Split('#')[0]); // Ignorer les fragments
         }
 
-        return links;
+        return new List<string>(uniqueLinks);
     }
 }
