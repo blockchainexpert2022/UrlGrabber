@@ -9,11 +9,16 @@ class Program
     // Compteur global pour compter les requêtes HTTP
     private static int TotalHttpRequests = 0;
 
+    private static string baseUrl = "";
+    
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.pcsoft.fr/";
-
+        string initialPageUrl = "https://forum.pcsoft.fr/index.awp";
+        Uri uri = new Uri(initialPageUrl);
+        baseUrl = uri.GetLeftPart(UriPartial.Authority);
+        Console.WriteLine("baseUrl : " + baseUrl);
+        
         try
         {
             // Créez une instance de HttpClient avec un délai d'expiration de 5 secondes
@@ -45,7 +50,7 @@ class Program
             // Si l'URL a déjà été visitée, on arrête pour éviter des boucles infinies
             return;
         }
-
+        
         Console.WriteLine($"Récupération de la page : {pageUrl}");
         visitedUrls.Add(pageUrl); // Marquer l'URL comme visitée
 
@@ -62,13 +67,12 @@ class Program
             // Envoyer une requête HTTP à chaque lien trouvé, sauf ceux à exclure
             foreach (string link in httpLinks)
             {
-                // Exclure les liens dont la base est www.w3.org
-                if (Uri.TryCreate(link, UriKind.Absolute, out Uri uri) && uri.Host == "www.w3.org")
+                //Console.WriteLine("pageUrl : " + pageUrl);
+                if (!link.StartsWith(baseUrl))
                 {
-                    Console.WriteLine($"Lien exclu (w3.org) : {link}");
                     continue;
                 }
-
+                
                 TotalHttpRequests++; // Incrémenter le compteur
                 Console.WriteLine($"[{TotalHttpRequests}] Envoi d'une requête à : {link}");
 
