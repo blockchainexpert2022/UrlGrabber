@@ -14,7 +14,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.lemonde.fr";
+        string initialPageUrl = "https://www.lefigaro.fr";
         Uri uri = new Uri(initialPageUrl);
         baseUrl = uri.GetLeftPart(UriPartial.Authority); // Base URL (ex : https://www.microsoft.com)
         Console.WriteLine("baseUrl : " + baseUrl);
