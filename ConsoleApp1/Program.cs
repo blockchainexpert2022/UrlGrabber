@@ -14,7 +14,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.reddit.com";
+        string initialPageUrl = "https://www.lemonde.fr";
         Uri uri = new Uri(initialPageUrl);
         baseUrl = uri.GetLeftPart(UriPartial.Authority); // Base URL (ex : https://www.microsoft.com)
         Console.WriteLine("baseUrl : " + baseUrl);
@@ -56,7 +56,7 @@ class Program
             // Si l'URL a déjà été visitée, on arrête pour éviter des boucles infinies
             return;
         }
-
+        
         Console.WriteLine($"Récupération de la page : {cleanUrl}");
         visitedUrls.Add(cleanUrl); // Marquer l'URL comme visitée
 
@@ -79,6 +79,22 @@ class Program
                     continue;
                 }
 
+                bool bBypass = false;
+                List<string> lstExclude = new List<string> { ".woff2", ".ico", ".css", ".js" };
+                foreach (string exclude in lstExclude)
+                {
+                    if (link.ToLower().EndsWith(exclude))
+                    {
+                        bBypass = true;
+                        break;
+                    }
+                }
+                    
+                if (bBypass)
+                {
+                    continue;
+                }
+                
                 TotalHttpRequests++; // Incrémenter le compteur
                 Console.WriteLine($"[{TotalHttpRequests}] Envoi d'une requête à : {link}");
 
