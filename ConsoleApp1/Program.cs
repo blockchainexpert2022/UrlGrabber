@@ -10,15 +10,15 @@ class Program
     private static int TotalHttpRequests = 0;
 
     private static string baseUrl = "";
-    
+
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://forum.pcsoft.fr/index.awp";
+        string initialPageUrl = "https://www.microsoft.com";
         Uri uri = new Uri(initialPageUrl);
-        baseUrl = uri.GetLeftPart(UriPartial.Authority);
+        baseUrl = uri.GetLeftPart(UriPartial.Authority); // Base URL (ex : https://www.microsoft.com)
         Console.WriteLine("baseUrl : " + baseUrl);
-        
+
         try
         {
             // Créez une instance de HttpClient avec un délai d'expiration de 5 secondes
@@ -53,7 +53,7 @@ class Program
             // Si l'URL a déjà été visitée, on arrête pour éviter des boucles infinies
             return;
         }
-        
+
         Console.WriteLine($"Récupération de la page : {cleanUrl}");
         visitedUrls.Add(cleanUrl); // Marquer l'URL comme visitée
 
@@ -75,7 +75,7 @@ class Program
                 {
                     continue;
                 }
-                
+
                 TotalHttpRequests++; // Incrémenter le compteur
                 Console.WriteLine($"[{TotalHttpRequests}] Envoi d'une requête à : {link}");
 
@@ -92,10 +92,9 @@ class Program
                         // Vérifier si l'URL finale a déjà été visitée
                         if (!visitedUrls.Contains(finalUrl.Split('#')[0]))
                         {
-                            //Console.WriteLine($"Succès ({response.StatusCode}) pour : {finalUrl}");
+                            Console.WriteLine($"Succès ({response.StatusCode}) pour : {finalUrl}");
 
                             // Ajouter l'URL finale et appeler récursivement
-                            visitedUrls.Add(finalUrl.Split('#')[0]);
                             await CrawlPageAsync(client, finalUrl, visitedUrls);
                         }
                         else
