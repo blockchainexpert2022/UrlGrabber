@@ -14,7 +14,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.microsoft.com/";
+        string initialPageUrl = "https://forum.pcsoft.fr/index.awp";
         Uri uri = new Uri(initialPageUrl);
         baseUrl = uri.GetLeftPart(UriPartial.Authority);
         Console.WriteLine("baseUrl : " + baseUrl);
@@ -92,7 +92,7 @@ class Program
                         // Vérifier si l'URL finale a déjà été visitée
                         if (!visitedUrls.Contains(finalUrl.Split('#')[0]))
                         {
-                            Console.WriteLine($"Succès ({response.StatusCode}) pour : {finalUrl}");
+                            //Console.WriteLine($"Succès ({response.StatusCode}) pour : {finalUrl}");
 
                             // Ajouter l'URL finale et appeler récursivement
                             visitedUrls.Add(finalUrl.Split('#')[0]);
