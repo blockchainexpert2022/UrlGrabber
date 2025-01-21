@@ -14,7 +14,7 @@ class Program
     static async Task Main(string[] args)
     {
         // URL de la page à analyser
-        string initialPageUrl = "https://www.microsoft.com";
+        string initialPageUrl = "https://www.geostrategia.fr/";
         Uri uri = new Uri(initialPageUrl);
         baseUrl = uri.GetLeftPart(UriPartial.Authority); // Base URL (ex : https://www.microsoft.com)
         Console.WriteLine("baseUrl : " + baseUrl);
@@ -25,6 +25,9 @@ class Program
             using (HttpClient client = new HttpClient())
             {
                 client.Timeout = TimeSpan.FromSeconds(5); // Configure un timeout de 5 secondes
+                
+                // Ajoutez l'en-tête User-Agent pour ressembler à un navigateur Chrome
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
 
                 // Ensemble pour garder une trace des pages visitées (insensible à la casse)
                 HashSet<string> visitedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
